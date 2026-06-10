@@ -243,7 +243,7 @@ perg1_props <- perg1_props |> as_tibble() |>
   mutate(estimate = paste0(round(ativamente_fisico_desloc, 3), " (", round(ci_l, 3), "; ", 
                            round(ci_u,3 ), ")"))
 
-# writexl::write_xlsx(perg1_props, "proporcoes_e_IC_ativos_fisicamente_desloc.xlsx")
+writexl::write_xlsx(perg1_props, "figuras/proporcoes_e_IC_ativos_fisicamente_desloc.xlsx")
 
 perg1_trend <- ggpredict(m1, terms=c("ano [all]")) |> as_tibble() 
 
@@ -316,7 +316,7 @@ perg1_regioes_props <- perg1_regioes_props |> as_tibble() |>
   mutate(estimate = paste0(round(ativamente_fisico_desloc, 3), " (", round(ci_l, 3), "; ", 
                            round(ci_u,3 ), ")"))
 
-# writexl::write_xlsx(perg1_regioes_props, "MACROREG_proporcoes_e_IC_ativos_fisicamente_desloc.xlsx")
+writexl::write_xlsx(perg1_regioes_props, "MACROREG_proporcoes_e_IC_ativos_fisicamente_desloc.xlsx")
 
 # modelo PW
 # 
@@ -477,8 +477,8 @@ plot_sudeste <- ggplot(subset(perg1_regioes_props, macro_reg == "Sudeste"),
 (plot_geral + plot_norte + plot_nordeste + plot_centro + plot_sudeste + plot_sul) +
   plot_annotation(tag_levels = "A")
 
-# ggsave("figuras/plot_ativos_no_deslocamento_por_regioes_spline.png", dpi=600, 
-#        units="in", height=7, width=12)
+ggsave("figuras/plot_ativos_no_deslocamento_por_regioes_spline.png", dpi=600, 
+       units="in", height=7, width=12)
 
 # macro regioes em spline
 
@@ -626,363 +626,8 @@ plot_sudeste <- ggplot(subset(perg1_regioes_props, macro_reg == "Sudeste"),
     plot_sudeste_sp + plot_sul_sp) +
   plot_annotation(tag_levels = "A")
 
-# ggsave("figuras/plot_ativos_no_deslocamento_por_regioes_spline.png", dpi=600, 
-#        units="in", height=7, width=12)
-
-# ## pergunta 2) existem tendencias ao longo dos anos nos 4 grupos de atv fisica de deslocamento?
-# 
-# vigi_design <- update(vigi_design, ano_2 = ano/1000)
-# 
-# m3_prop <- svyolr(cat_ativ ~ ano_2, design=vigi_design) 
-# m3_prop_piecewise <- svyolr(cat_ativ ~ bs(ano_2, knots = c(2.020, 2.021), degree=1), design=vigi_design) 
-# 
-# car::Anova(m3_prop_piecewise, type="II")
-# 
-# m3_predictions <- predict(m3_prop, type="probs") |> as_tibble() |> 
-#   mutate(ano = vigi_design$variables$ano) |> 
-#   group_by(ano) |> summarise(across(everything(), mean)) |> 
-#   pivot_longer(2:5, names_to='categoria', values_to='prob')
-# 
-# m3_predictions <- predict(m3_prop_piecewise, type="probs") |> as_tibble() |> 
-#   mutate(ano = vigi_design$variables$ano) |> 
-#   group_by(ano) |> summarise(across(everything(), mean)) |> 
-#   pivot_longer(2:5, names_to='categoria', values_to='prob')
-# 
-# ggplot(m3_predictions, aes(x=ano, y=prob, color=categoria)) + 
-#   geom_point() +
-#   geom_line() +
-#   scale_x_continuous(breaks=seq(2009, 2022, 1)) +
-#   theme_bw()
-# 
-# # medias e dps para visualizacoes
-# 
-# perg2_props <- svyby(
-#   formula = ~cat_ativ, 
-#   by = ~ano, 
-#   design = vigi_design,
-#   FUN = svymean, 
-#   method = "logit",  # Logit transform for CI
-#   vartype = "ci"     # Return confidence intervals
-# )
-# 
-# names(perg2_props) <- c("ano", "nao_realiza", "min_0_30", "min_30_60", "min_60",
-#                         "nao_realiza_conf_low", "min_0_30_conf_low", "min_30_60_conf_low", "min_60_conf_low",
-#                         "nao_realiza_conf_high", "min_0_30_conf_high", "min_30_60_conf_high", "min_60_conf_high")
-# 
-# perg2_props_main <- perg2_props |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(!stringr::str_detect(category, "conf_low|conf_high")) 
-# 
-# perg2_props_low <- perg2_props |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(stringr::str_detect(category, "conf_low")) |> 
-#   rename(conf_low = proportion)
-# 
-# perg2_props_high <- perg2_props |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(stringr::str_detect(category, "conf_high")) |> 
-#   rename(conf_high = proportion)
-# 
-# perg2_props_main$conf_low <- perg2_props_low$conf_low
-# perg2_props_main$conf_high <- perg2_props_high$conf_high
-# 
-# perg2_props_main <- perg2_props_main |> 
-#   mutate(category = fct_relevel(category,
-#                                 "nao_realiza",
-#                                 "min_0_30",
-#                                 "min_30_60",
-#                                 "min_60")) |> 
-#   mutate(escolaridade_cat_num = "Geral")
-# 
-# (
-# grupos_geral <- ggplot(perg2_props_main, aes(x=ano, y=proportion, ymin=conf_low, ymax=conf_high,
-#                              color=category, fill=category)) +
-#   facet_wrap(~escolaridade_cat_num) +
-#   geom_vline(xintercept=2020, linetype="dashed", alpha=.5) +
-#   geom_pointrange(aes(shape=category), size=0.25) +
-#   scale_color_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                      labels=c("Não realiza",
-#                               ">0 e ≤30 min.",
-#                               ">30 e ≤60 min.",
-#                               ">60 min.")) +
-#   scale_fill_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                     labels=c("Não realiza",
-#                              ">0 e ≤30 min.",
-#                              ">30 e ≤60 min.",
-#                              ">60 min.")) +
-#   scale_x_continuous(breaks=seq(2009, 2023, 1),
-#                      labels=c(seq(2009, 2021, 1), "", "2023")) +
-#   scale_y_continuous(limits=c(0, .9),
-#                      labels=paste0(seq(0, 90, 10), "%"),
-#                      breaks=seq(0, .9, .1)) +
-#   scale_shape_manual(values=c(21, 22, 23, 24),
-#                      labels=c("Não realiza",
-#                               ">0 e ≤30 min.",
-#                               ">30 e ≤60 min.",
-#                               ">60 min.")) +
-#   geom_text(aes(y=if_else(category == "min_60", conf_low - .02, conf_high + 0.015), 
-#                 label=paste0(round(proportion , 2)*100, "%")),
-#             size=2.5, color="black") +
-#   geom_line() +
-#   theme_avp() +
-#   labs(x="Ano", y="Indivíduos",
-#        color="Deslocamento", fill="Deslocamento", shape="Deslocamento") +
-#   theme(axis.text.x = element_text(angle = 45, hjust=1))
-# )
-# 
-# # ggsave("figuras/plot_categorias_atividade_deslocamento.png", dpi=600, 
-# #        units="in", height=4, width=6)
-# 
-# # ggsave("figuras/plot_categorias_atividade_deslocamento.pdf", dpi=600, 
-# #        units="in", height=4, width=6, useDingbats=FALSE)
-# 
-# perg2_props_main |>  
-#   mutate(estimate = paste0(round(proportion , 3), " (", 
-#                            round(conf_low, 3), "; ", 
-#                            round(conf_high,3 ), ")")) |> 
-#   writexl::write_xlsx("grupos_desloc_tendencia_anual.xlsx")
-# 
-# ## mesma relacao mas olhando para niveis de escolaridade
-# 
-# m3_prop_piecewise_esc <- svyolr(cat_ativ ~ bs(ano_2, knots = c(2.020, 2.021), degree=1) *
-#                               escolaridade_cat_num, design=vigi_design) 
-# 
-# summary(m3_prop_piecewise_esc)
-# car::Anova(m3_prop_piecewise_esc, "II")
-
-# # figura
-# 
-# perg2_props_esc <- svyby(
-#   formula = ~cat_ativ, 
-#   by = ~ ano + escolaridade_cat_num, 
-#   design = vigi_design,
-#   FUN = svymean, 
-#   method = "logit",  # Logit transform for CI
-#   vartype = "ci"     # Return confidence intervals
-# )
-# 
-# names(perg2_props_esc) <- c("ano", "escolaridade_cat_num", "nao_realiza", "min_0_30", "min_30_60", "min_60",
-#                         "nao_realiza_conf_low", "min_0_30_conf_low", "min_30_60_conf_low", "min_60_conf_low",
-#                         "nao_realiza_conf_high", "min_0_30_conf_high", "min_30_60_conf_high", "min_60_conf_high")
-# 
-# perg2_props_main_esc <- perg2_props_esc |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(!stringr::str_detect(category, "conf_low|conf_high")) 
-# 
-# perg2_props_low_esc <- perg2_props_esc |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(stringr::str_detect(category, "conf_low")) |> 
-#   rename(conf_low = proportion)
-# 
-# perg2_props_high_esc <- perg2_props_esc |> 
-#   pivot_longer(
-#     cols = starts_with("nao_realiza") | starts_with("min_"),
-#     names_to = "category",
-#     values_to = "proportion",
-#     names_pattern = "^(.*)$"  # Match all column names
-#   ) |> 
-#   filter(stringr::str_detect(category, "conf_high")) |> 
-#   rename(conf_high = proportion)
-# 
-# perg2_props_main_esc$conf_low <- perg2_props_low_esc$conf_low
-# perg2_props_main_esc$conf_high <- perg2_props_high_esc$conf_high
-# 
-# perg2_props_main_esc <- perg2_props_main_esc |> 
-#   mutate(category = fct_relevel(category,
-#                                 "nao_realiza",
-#                                 "min_0_30",
-#                                 "min_30_60",
-#                                 "min_60"))
-# 
-# ## plot por grupo
-# 
-# (
-# grupos_0_4 <- ggplot(subset(perg2_props_main_esc,
-#                             escolaridade_cat_num == "0-4 anos"), aes(x=ano, y=proportion, 
-#                                                ymin=conf_low, ymax=conf_high,
-#                              color=category, fill=category)) +
-#   facet_wrap(~escolaridade_cat_num) +
-#   geom_vline(xintercept=2020, linetype="dashed", alpha=.5) +
-#   geom_pointrange(aes(shape=category), size=0.25) +
-#   scale_color_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                      labels=c("Não realiza",
-#                               ">0 e ≤30 min.",
-#                               ">30 e ≤60 min.",
-#                               ">60 min.")) +
-#   scale_fill_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                     labels=c("Não realiza",
-#                              ">0 e ≤30 min.",
-#                              ">30 e ≤60 min.",
-#                              ">60 min.")) +
-#   scale_x_continuous(breaks=seq(2009, 2023, 1),
-#                      labels=c(seq(2009, 2021, 1), "", "2023")) +
-#   scale_y_continuous(limits=c(0, .9),
-#                      labels=paste0(seq(0, 90, 10), "%"),
-#                      breaks=seq(0, .9, .1)) +
-#   scale_shape_manual(values=c(21, 22, 23, 24),
-#                      labels=c("Não realiza",
-#                               ">0 e ≤30 min.",
-#                               ">30 e ≤60 min.",
-#                               ">60 min.")) +
-#   geom_text(aes(y=if_else(category == "min_60", conf_low - .02, conf_high + 0.015), 
-#                 label=paste0(round(proportion , 2)*100, "%")),
-#             size=2, color="black") +
-#   geom_line() +
-#   theme_avp() +
-#   labs(x="Ano", y="Indivíduos",
-#        color="Deslocamento", fill="Deslocamento", shape="Deslocamento") +
-#   theme(axis.text.x = element_text(angle = 45, hjust=1))
-# )
-# 
-# (
-#   grupos_5_8 <- ggplot(subset(perg2_props_main_esc,
-#                               escolaridade_cat_num == "5-8 anos"), aes(x=ano, y=proportion, 
-#                                                                        ymin=conf_low, ymax=conf_high,
-#                                                                        color=category, fill=category)) +
-#     facet_wrap(~escolaridade_cat_num) +
-#     geom_vline(xintercept=2020, linetype="dashed", alpha=.5) +
-#     geom_pointrange(aes(shape=category), size=0.25) +
-#     scale_color_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     scale_fill_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                       labels=c("Não realiza",
-#                                ">0 e ≤30 min.",
-#                                ">30 e ≤60 min.",
-#                                ">60 min.")) +
-#     scale_x_continuous(breaks=seq(2009, 2023, 1),
-#                        labels=c(seq(2009, 2021, 1), "", "2023")) +
-#     scale_y_continuous(limits=c(0, .9),
-#                        labels=paste0(seq(0, 90, 10), "%"),
-#                        breaks=seq(0, .9, .1)) +
-#     scale_shape_manual(values=c(21, 22, 23, 24),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     geom_text(aes(y=if_else(category == "min_60", conf_low - .02, conf_high + 0.015), 
-#                   label=paste0(round(proportion , 2)*100, "%")),
-#               size=2, color="black") +
-#     geom_line() +
-#     theme_avp() +
-#     labs(x="Ano", y="Indivíduos",
-#          color="Deslocamento", fill="Deslocamento", shape="Deslocamento") +
-#     theme(axis.text.x = element_text(angle = 45, hjust=1))
-# )
-# 
-# (
-#   grupos_9_11 <- ggplot(subset(perg2_props_main_esc,
-#                               escolaridade_cat_num == "9-11 anos"), aes(x=ano, y=proportion, 
-#                                                                        ymin=conf_low, ymax=conf_high,
-#                                                                        color=category, fill=category)) +
-#     facet_wrap(~escolaridade_cat_num) +
-#     geom_vline(xintercept=2020, linetype="dashed", alpha=.5) +
-#     geom_pointrange(aes(shape=category), size=0.25) +
-#     scale_color_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     scale_fill_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                       labels=c("Não realiza",
-#                                ">0 e ≤30 min.",
-#                                ">30 e ≤60 min.",
-#                                ">60 min.")) +
-#     scale_x_continuous(breaks=seq(2009, 2023, 1),
-#                        labels=c(seq(2009, 2021, 1), "", "2023")) +
-#     scale_y_continuous(limits=c(0, .9),
-#                        labels=paste0(seq(0, 90, 10), "%"),
-#                        breaks=seq(0, .9, .1)) +
-#     scale_shape_manual(values=c(21, 22, 23, 24),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     geom_text(aes(y=if_else(category == "min_60", conf_low - .02, conf_high + 0.015), 
-#                   label=paste0(round(proportion , 2)*100, "%")),
-#               size=2, color="black") +
-#     geom_line() +
-#     theme_avp() +
-#     labs(x="Ano", y="Indivíduos",
-#          color="Deslocamento", fill="Deslocamento", shape="Deslocamento") +
-#     theme(axis.text.x = element_text(angle = 45, hjust=1))
-# )
-# 
-# (
-#   grupos_12 <- ggplot(subset(perg2_props_main_esc,
-#                               escolaridade_cat_num == "12 ou mais anos"), aes(x=ano, y=proportion, 
-#                                                                        ymin=conf_low, ymax=conf_high,
-#                                                                        color=category, fill=category)) +
-#     facet_wrap(~escolaridade_cat_num) +
-#     geom_vline(xintercept=2020, linetype="dashed", alpha=.5) +
-#     geom_pointrange(aes(shape=category), size=0.25) +
-#     scale_color_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     scale_fill_manual(values=c("#3db85a", "#1f9075", "#2a487a", "#361865"),
-#                       labels=c("Não realiza",
-#                                ">0 e ≤30 min.",
-#                                ">30 e ≤60 min.",
-#                                ">60 min.")) +
-#     scale_x_continuous(breaks=seq(2009, 2023, 1),
-#                        labels=c(seq(2009, 2021, 1), "", "2023")) +
-#     scale_y_continuous(limits=c(0, .9),
-#                        labels=paste0(seq(0, 90, 10), "%"),
-#                        breaks=seq(0, .9, .1)) +
-#     scale_shape_manual(values=c(21, 22, 23, 24),
-#                        labels=c("Não realiza",
-#                                 ">0 e ≤30 min.",
-#                                 ">30 e ≤60 min.",
-#                                 ">60 min.")) +
-#     geom_text(aes(y=if_else(category == "min_60", conf_low - .02, conf_high + 0.015), 
-#                   label=paste0(round(proportion , 2)*100, "%")),
-#               size=2, color="black") +
-#     geom_line() +
-#     theme_avp() +
-#     labs(x="Ano", y="Indivíduos",
-#          color="Deslocamento", fill="Deslocamento", shape="Deslocamento") +
-#     theme(axis.text.x = element_text(angle = 45, hjust=1))
-# )
-# 
-# ((grupos_0_4 + grupos_5_8) / (grupos_9_11 + grupos_12)) +
-#   plot_annotation(tag_levels = "A") +
-#   plot_layout(guides="collect") &
-#   theme(legend.position='bottom')
-
-#ggsave("figuras/plot_categorias_atividade_deslocamento_todos.png", dpi=600, 
-#       units="in", height=8, width=8)
-
-#ggsave("figuras/plot_categorias_atividade_deslocamento_todos.pdf", dpi=600, 
-#       units="in", height=8, width=8, useDingbats=FALSE)
+ggsave("figuras/plot_ativos_no_deslocamento_por_regioes_spline.png", dpi=600, 
+       units="in", height=7, width=12)
 
 ## perguntas adicionais
 
@@ -1044,7 +689,7 @@ perg_sexo_props_report <- perg_sexo_props |>
   select(ano, sexo, estimate) |> 
   pivot_wider(names_from=ano, values_from=estimate)
 
-# writexl::write_xlsx(perg_sexo_props_report, "figuras\\sexo_props.xlsx")
+writexl::write_xlsx(perg_sexo_props_report, "figuras\\sexo_props.xlsx")
 
 # por faixa etaria
 
@@ -1118,7 +763,7 @@ perg_faixa_et_props_report <- perg_faixa_et_props |>
   select(ano, faixa_etaria, estimate) |> 
   pivot_wider(names_from=ano, values_from=estimate)
 
-# writexl::write_xlsx(perg_faixa_et_props_report, "figuras\\faixa_etaria_props.xlsx")
+writexl::write_xlsx(perg_faixa_et_props_report, "figuras\\faixa_etaria_props.xlsx")
 
 # escolaridade
 
@@ -1199,7 +844,7 @@ perg_escolaridade_props_report <- perg_escolaridade_props |>
   select(ano, escolaridade_cat_num, estimate) |> 
   pivot_wider(names_from=ano, values_from=estimate)
 
-# writexl::write_xlsx(perg_escolaridade_props_report, "figuras\\escolaridade_props.xlsx")
+writexl::write_xlsx(perg_escolaridade_props_report, "figuras\\escolaridade_props.xlsx")
 
 # por cor/raça
 
@@ -1279,15 +924,15 @@ perg_cor_props_report <- perg_cor_props |>
   select(ano, cor, estimate) |>
   pivot_wider(names_from=ano, values_from=estimate)
 
-#writexl::write_xlsx(perg_cor_props_report, "figuras\\cor_props.xlsx")
+writexl::write_xlsx(perg_cor_props_report, "figuras\\cor_props.xlsx")
 
 # entire panel
 
 (plot_sexo + plot_faixa_etaria + plot_escolaridade + plot_cor) +
   plot_annotation(tag_levels = "A")
 
-#ggsave("figuras/plot_ativos_variaveis_sociodemograficas.png", dpi=600,
-#      units="in", height=7, width=11)
+ggsave("figuras/plot_ativos_variaveis_sociodemograficas.png", dpi=600,
+      units="in", height=7, width=11)
 
 # figura raça/cor com todas as categorias, menos os que não responderam.
 
@@ -1331,8 +976,8 @@ perg_cor_props_2 <- perg_cor_props_2 |>
     theme(axis.text.x = element_text(angle = 45, hjust=1))
 )
 
-#ggsave("figuras/plot_suplementar_todas_racas.png", dpi=600,
-#      units="in", height=6, width=9)
+ggsave("figuras/plot_suplementar_todas_racas.png", dpi=600,
+      units="in", height=6, width=9)
 
 # tabela 1
 
@@ -1344,15 +989,19 @@ dat <- vigi_design$variables |>
 
 table_1_total <- dat |> 
   tbl_summary(by="ano",
-              statistic = list(all_continuous() ~ "{mean} ({sd})"))
+              statistic = list(all_continuous() ~ "{mean} ({sd})"),
+              digits = list(all_continuous() ~ 1,
+                            all_categorical() ~ 1))
 
-#table_1_total |> as_hux_xlsx("figuras/tabela_1.xlsx") 
+table_1_total |> as_hux_xlsx("figuras/tabela_1.xlsx") 
 
 table_1_total_svy <- vigi_table_design |> 
   tbl_svysummary(by="ano",
               statistic = list(all_continuous() ~ "{mean} ({sd})",
-                               all_categorical() ~ "{p} %"))
+                               all_categorical() ~ "{p}%"),
+              digits = list(all_continuous() ~ 1,
+                            all_categorical() ~ 1))
 
-#table_1_total_svy |> as_hux_xlsx("figuras/tabela_1_pesada.xlsx") 
+table_1_total_svy |> as_hux_xlsx("figuras/tabela_1_pesada.xlsx") 
 
 ################################################################################
